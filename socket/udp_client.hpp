@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <functional>
 #include <cstring>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -15,11 +16,13 @@
 #define SOCKET_ERR  3
 #define OPEN_ERR    4
 
-namespace client{  
+namespace client{ 
     class UDPClient {
     public:
         UDPClient(const std::string& address, uint16_t port)
-            : _address(address), _port(port), _sockfd(-1)
+            : _address(address),
+              _port(port),
+              _sockfd(-1)
         {}
 
 
@@ -51,6 +54,18 @@ namespace client{
                     std::cerr << "Failed to send message. errno: " << errno << std::endl;
                     exit(SOCKET_ERR);
                 }
+
+                // 接收服务器的响应
+                char buffer[1024];
+                struct sockaddr_in temp;
+                socklen_t len = sizeof(temp);
+                ssize_t n = recvfrom(_sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&temp, &len);
+                if (n < 0) {
+                    std::cerr << "Failed to receive message. errno: " << errno << std::endl;
+                    exit(SOCKET_ERR);
+                }
+                buffer[n] = '\0';
+                std::cout << "服务器翻译结果 # " << std::endl << buffer << std::endl;
             }
         }
 

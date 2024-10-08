@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <functional>
 #include <cstring>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -15,21 +16,35 @@
 
 
 namespace server{
+    // sockfd, clientAddr, clientPort, messege
+    using func_t = std::function<void(int, std::string, uint16_t, std::string)>;
+
     class UDPServer {
     public:
-        UDPServer(int port, const std::string& address = "0.0.0.0")
-            : _address(address), _port(port), _sockfd(-1)
+        // 加入回调函数(callback function to handle some tasks)
+        UDPServer(func_t callback, int port, const std::string& address = "0.0.0.0")
+            : _address(address), _port(port), _sockfd(-1), _callback(callback)
         {}
 
         void run(){
+            char buffer[1024];
             // 服务器的本质是一个死循环
             for(;;){
-                receiveMessages();
+                struct sockaddr_in _clientAddr;
+                socklen_t _clientAddrLen = sizeof(_clientAddr);
+                ssize_t s = recvfrom(_sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&_clientAddr, &_clientAddrLen);
+                if (s < 0) {
+                    std::cerr << "Failed to receive message. errno: " << errno << std::endl;
+                    return;
+                }
+                buffer[s] = '\0';
+                std::cout << "Client[" << inet_ntoa(_clientAddr.sin_addr) << "]" << " : " << ntohs(_clientAddr.sin_port) << " # " << buffer << std::endl;
+                std::string messege = buffer;
+                _callback(_sockfd, inet_ntoa(_clientAddr.sin_addr), ntohs(_clientAddr.sin_port), messege);
             }
         }
 
         // 创建套接字
-        // 
         bool initSocket(){
             // DGram socket 适用于UDP
             _sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -41,7 +56,7 @@ namespace server{
             memset(&_serverAddr, 0, sizeof(_serverAddr));
             _serverAddr.sin_family = AF_INET;
             _serverAddr.sin_port = htons(_port);
-            _serverAddr.sin_addr.s_addr = inet_addr(_address.c_str());
+            _serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
             // bind绑定
             int n = bind(_sockfd, (struct sockaddr*)&_serverAddr, sizeof(_serverAddr));
@@ -49,21 +64,8 @@ namespace server{
                 std::cerr << "Failed to bind socket. errno: " << errno << std::endl;
                 exit(BIND_ERR);
             }
+            std::cout << "bind success: " << " : " << _sockfd << std::endl;
             return true;
-        }
-
-        // 接收消息
-        void receiveMessages(){
-            struct sockaddr_in _clientAddr;
-            socklen_t _clientAddrLen = sizeof(_clientAddr);
-            char buffer[1024];
-            ssize_t s = recvfrom(_sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&_clientAddr, &_clientAddrLen);
-            if (s < 0) {
-                std::cerr << "Failed to receive message. errno: " << errno << std::endl;
-                return;
-            }
-            buffer[s] = '\0';
-            std::cout << "Client[" << inet_ntoa(_clientAddr.sin_addr) << "]" << " : " << ntohs(_clientAddr.sin_port) << " # " << buffer << std::endl;
         }
 
         ~UDPServer(){
@@ -73,10 +75,10 @@ namespace server{
         }
 
     private:
+        func_t _callback;
         std::string _address;
         int _port;
         int _sockfd;
-        // struct sockaddr_in serverAddr_, clientAddr_;
     };
 
 }
