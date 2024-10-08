@@ -3,3 +3,5 @@ banana:香蕉
 orange:橘子
 watermelon:西瓜
 lemon:柠檬
+man:人类
+tree:树

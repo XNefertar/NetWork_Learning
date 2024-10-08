@@ -65,7 +65,7 @@ namespace client{
                     exit(SOCKET_ERR);
                 }
                 buffer[n] = '\0';
-                std::cout << "服务器翻译结果 # " << std::endl << buffer << std::endl;
+                std::cout << "服务器处理结果 # " << std::endl << buffer << std::endl;
             }
         }
 
@@ -82,10 +82,5 @@ namespace client{
         int _sockfd;
     };
 }
-
-
-
-
-
 
 #endif // _UDP_CLIENT_HPP_

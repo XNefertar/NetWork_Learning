@@ -1,4 +1,5 @@
 #include "udp_server.hpp"
+#include <signal.h>
 #include <memory>
 #include <fstream>
 #include <unordered_map>
@@ -13,6 +14,7 @@ unordered_map<string, string> dict;
 // static void cutString(){
 
 // }
+
 
 static void initDictionary(){
     ifstream ifs(dictPos, std::ios::binary);
@@ -35,6 +37,7 @@ static void initDictionary(){
     ifs.close();
 }
 
+// Demo1
 static void handlerMessage(int sockfd, string address, uint16_t port, string message){
     initDictionary();
     struct sockaddr_in _clientAddr;
@@ -51,10 +54,42 @@ static void handlerMessage(int sockfd, string address, uint16_t port, string mes
     }
 }
 
+// Demo2
+static void execCommand(int sockfd, string address, uint16_t port, string cmd){
+    string response;
+    FILE* fp = popen(cmd.c_str(), "r");
+    if(fp == NULL){
+        response = "Failed to execute command.";
+    }
+    else{
+        char buffer[1024];
+        while(fgets(buffer, sizeof(buffer), fp)){
+            response += buffer;
+        }
+        pclose(fp);
+    }
+    
+    // 信息返回给客户端
+    struct sockaddr_in _clientAddr;
+    bzero(&_clientAddr, sizeof(_clientAddr));
+
+    _clientAddr.sin_family = AF_INET;
+    _clientAddr.sin_port = htons(port);
+    _clientAddr.sin_addr.s_addr = inet_addr(address.c_str());
+    sendto(sockfd, response.c_str(), response.size(), 0, (struct sockaddr*)&_clientAddr, sizeof(_clientAddr));
+}
+
 
 static void Usage(string proc)
 {
     cout << "\nUsage:\n\t" << proc << " local_port\n\n";
+}
+
+
+void reload(int sig){
+    (void)sig;
+    dict.clear();
+    initDictionary();
 }
 
 // ./udpServer port
@@ -68,11 +103,11 @@ int main(int argc, char *argv[])
     uint16_t port = atoi(argv[1]);
 
     // string ip = argv[1];
-    // signal(2, reload);
+    signal(2, reload);
     // initDict();
     // debugPrint();
 
-    std::unique_ptr<UDPServer> usvr(new UDPServer(handlerMessage, port));
+    std::unique_ptr<UDPServer> usvr(new UDPServer(execCommand, port));
 
     usvr->initSocket();
     usvr->run();
