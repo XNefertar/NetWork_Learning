@@ -1,9 +1,10 @@
 #include "udp_server.hpp"
-#include <signal.h>
+#include "onlineUser.hpp"
 #include <memory>
 #include <fstream>
 #include <unordered_map>
 #include <signal.h>
+#include <strings.h>
 
 using namespace std;
 using namespace server;
@@ -38,6 +39,7 @@ static void initDictionary(){
 }
 
 // Demo1
+//  客户-服务端通信
 static void handlerMessage(int sockfd, string address, uint16_t port, string message){
     initDictionary();
     struct sockaddr_in _clientAddr;
@@ -55,6 +57,7 @@ static void handlerMessage(int sockfd, string address, uint16_t port, string mes
 }
 
 // Demo2
+// 命令行参数处理
 static void execCommand(int sockfd, string address, uint16_t port, string cmd){
     string response;
     FILE* fp = popen(cmd.c_str(), "r");
@@ -77,6 +80,38 @@ static void execCommand(int sockfd, string address, uint16_t port, string cmd){
     _clientAddr.sin_port = htons(port);
     _clientAddr.sin_addr.s_addr = inet_addr(address.c_str());
     sendto(sockfd, response.c_str(), response.size(), 0, (struct sockaddr*)&_clientAddr, sizeof(_clientAddr));
+}
+
+
+// Demo3
+// 简易聊天室
+
+// 创建一个在线用户管理对象
+onlineUser onlineUsers;
+static int inode = 0;
+
+static void routeMessage(int sockfd, string address, uint16_t port, string message){
+    if (message == "online"){
+        // std::string nickName = "Online users:" + to_string(inode);
+        onlineUsers.addUser(address, port);
+    }
+    if (message == "offline"){
+        onlineUsers.removeUser(address, port);
+    }
+    // if (message == "show"){
+    //     onlineUsers.showUsers();
+    // }
+    if(onlineUsers.isUserExist(address)){
+        onlineUsers.broadcast(sockfd, address, port, message);
+    }
+    else{
+        struct sockaddr_in _clientAddr;
+        _clientAddr.sin_family = AF_INET;
+        _clientAddr.sin_port = htons(port);
+        _clientAddr.sin_addr.s_addr = inet_addr(address.c_str());
+        string response = "Please connect to the Internet and try again...";
+        sendto(sockfd, response.c_str(), response.size(), 0, (struct sockaddr*)&_clientAddr, sizeof(_clientAddr));
+    }
 }
 
 
@@ -103,11 +138,13 @@ int main(int argc, char *argv[])
     uint16_t port = atoi(argv[1]);
 
     // string ip = argv[1];
-    signal(2, reload);
+    // signal(2, reload);
     // initDict();
     // debugPrint();
+    // std::unique_ptr<UDPServer> usvr(new UDPServer(handlerMessage, port));
+    // std::unique_ptr<UDPServer> usvr(new UDPServer(execCommand, port));
 
-    std::unique_ptr<UDPServer> usvr(new UDPServer(execCommand, port));
+    std::unique_ptr<UDPServer> usvr(new UDPServer(routeMessage, port));
 
     usvr->initSocket();
     usvr->run();

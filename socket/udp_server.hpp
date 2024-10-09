@@ -1,6 +1,7 @@
 #ifndef UDP_SERVER_HPP
 #define UDP_SERVER_HPP
 
+#include "onlineUser.hpp"
 #include <iostream>
 #include <string>
 #include <functional>
@@ -16,7 +17,7 @@
 
 
 namespace server{
-    // sockfd, clientAddr, clientPort, messege
+    // sockfd, clientAddr, clientPort, message
     using func_t = std::function<void(int, std::string, uint16_t, std::string)>;
 
     class UDPServer {
@@ -38,9 +39,9 @@ namespace server{
                     return;
                 }
                 buffer[s] = '\0';
-                std::cout << "Client[" << inet_ntoa(_clientAddr.sin_addr) << "]" << " : " << ntohs(_clientAddr.sin_port) << " # " << buffer << std::endl;
-                std::string messege = buffer;
-                _callback(_sockfd, inet_ntoa(_clientAddr.sin_addr), ntohs(_clientAddr.sin_port), messege);
+                std::cout << inet_ntoa(_clientAddr.sin_addr) << "[" << ntohs(_clientAddr.sin_port) << "]" << " # " << buffer << std::endl;
+                std::string message = buffer;
+                _callback(_sockfd, inet_ntoa(_clientAddr.sin_addr), ntohs(_clientAddr.sin_port), message);
             }
         }
 
