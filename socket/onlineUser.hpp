@@ -73,6 +73,12 @@ public:
         return _users.find(address) != _users.end();
     }
 
+    std::string getUser(sockaddr_in clientAddr){
+        if(isUserExist(inet_ntoa(clientAddr.sin_addr)))
+            return _users[inet_ntoa(clientAddr.sin_addr)]->getUsername();
+        else return "offline user";
+    }
+
     void broadcast(int sockfd, const std::string& address, const uint16_t& port, const std::string& message){
         for(auto it = _users.begin(); it != _users.end(); ++it){
             struct sockaddr_in _clientAddr;

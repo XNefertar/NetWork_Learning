@@ -15,6 +15,8 @@
 #define SOCKET_ERR  3
 #define OPEN_ERR    4
 
+class onlineUser;
+extern onlineUser onlineUsers;
 
 namespace server{
     // sockfd, clientAddr, clientPort, message
@@ -39,7 +41,8 @@ namespace server{
                     return;
                 }
                 buffer[s] = '\0';
-                std::cout << inet_ntoa(_clientAddr.sin_addr) << "[" << ntohs(_clientAddr.sin_port) << "]" << " # " << buffer << std::endl;
+                std::string username = onlineUsers.getUser(_clientAddr);
+                std::cout << inet_ntoa(_clientAddr.sin_addr) << "[" << ntohs(_clientAddr.sin_port) << "]" << " (" << username << ") # " << buffer << std::endl;
                 std::string message = buffer;
                 _callback(_sockfd, inet_ntoa(_clientAddr.sin_addr), ntohs(_clientAddr.sin_port), message);
             }

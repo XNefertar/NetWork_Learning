@@ -9,6 +9,7 @@
 using namespace std;
 using namespace server;
 
+
 const std::string dictPos = "./dictionary.txt";
 unordered_map<string, string> dict;
 
@@ -87,8 +88,8 @@ static void execCommand(int sockfd, string address, uint16_t port, string cmd){
 // 简易聊天室
 
 // 创建一个在线用户管理对象
-onlineUser onlineUsers;
 static int inode = 0;
+onlineUser onlineUsers{};
 
 static void routeMessage(int sockfd, string address, uint16_t port, string message){
     if (message == "online"){
