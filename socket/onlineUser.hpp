@@ -48,8 +48,8 @@ public:
     onlineUser() = default;
     ~onlineUser() = default;
 
-    void addUser(std::string address, uint16_t port){
-        std::string username = "User " + std::to_string(numberID++);
+    void addUser(std::string address, uint16_t port, std::string username){
+        // std::string username = "User " + std::to_string(numberID++);
         std::shared_ptr<User> user(new User(address, port, username));
         _users.insert(std::make_pair(address, user));
     }
@@ -79,6 +79,12 @@ public:
         else return "offline user";
     }
 
+    std::string getUser(std::string address){
+        if(isUserExist(address))
+            return _users[address]->getUsername();
+        else return "offline user";
+    }
+
     void broadcast(int sockfd, const std::string& address, const uint16_t& port, const std::string& message){
         for(auto it = _users.begin(); it != _users.end(); ++it){
             struct sockaddr_in _clientAddr;
@@ -87,7 +93,7 @@ public:
             _clientAddr.sin_port = htons(it->second->getPort());
             _clientAddr.sin_addr.s_addr = inet_addr(it->second->getAddress().c_str());
 
-            std::string temp = "From " + address + "[" + std::to_string(port) + "]" + " name: " + it->second->getUsername() + " # " + message;
+            std::string temp = "From " + address + "[" + std::to_string(port) + "]" + " # " + message;
             sendto(sockfd, temp.c_str(), temp.size(), 0, (struct sockaddr*)&_clientAddr, sizeof(_clientAddr));
         }
     }

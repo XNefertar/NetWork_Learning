@@ -17,6 +17,7 @@
 
 class onlineUser;
 extern onlineUser onlineUsers;
+int inode = 0;
 
 namespace server{
     // sockfd, clientAddr, clientPort, message
@@ -42,9 +43,19 @@ namespace server{
                 }
                 buffer[s] = '\0';
                 std::string username = onlineUsers.getUser(_clientAddr);
-                std::cout << inet_ntoa(_clientAddr.sin_addr) << "[" << ntohs(_clientAddr.sin_port) << "]" << " (" << username << ") # " << buffer << std::endl;
-                std::string message = buffer;
-                _callback(_sockfd, inet_ntoa(_clientAddr.sin_addr), ntohs(_clientAddr.sin_port), message);
+                std::string message1 = buffer;
+                if(message1.find("online") != std::string::npos)
+                {
+                    message1 = message1.substr(7);
+                    if(message1.empty())
+                    {
+                        message1 = "User" + std::to_string(inode);
+                    }
+                    message1 += " welcome to chat room!";
+                }
+                std::cout << inet_ntoa(_clientAddr.sin_addr) << "[" << ntohs(_clientAddr.sin_port) << "]" \
+                << " (" << username << ") # " << message1 << std::endl;
+                _callback(_sockfd, inet_ntoa(_clientAddr.sin_addr), ntohs(_clientAddr.sin_port), (std::string)buffer);
             }
         }
 
