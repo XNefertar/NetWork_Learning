@@ -93,7 +93,7 @@ public:
             _clientAddr.sin_port = htons(it->second->getPort());
             _clientAddr.sin_addr.s_addr = inet_addr(it->second->getAddress().c_str());
 
-            std::string temp = "From " + address + "[" + std::to_string(port) + "]" + " # " + message;
+            std::string temp = "From " + address + "[" + std::to_string(port) + "]" + "(" + getUser(address) + ")" + " # " + message;
             sendto(sockfd, temp.c_str(), temp.size(), 0, (struct sockaddr*)&_clientAddr, sizeof(_clientAddr));
         }
     }
