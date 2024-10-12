@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <cstring>
 
 class ServerTCP
@@ -74,7 +75,29 @@ public:
             }
             std::cout << "Client connected" << std::endl;
             
-            socketIO(client_socket);
+            // version 1
+            // 串行执行
+            // socketIO(client_socket);
+            // close(client_socket);
+
+            // version 2 多进程版
+            pid_t id = fork();
+            if (id == 0) // child
+            {
+                close(_socketfd);
+                if(fork()>0) exit(0);
+                socketIO(client_socket);
+                close(client_socket);
+                exit(0);
+            }
+            close(client_socket);
+
+            //father
+            pid_t ret = waitpid(id, nullptr, 0);
+            if(ret>0)
+            {
+                std::cout << "waitsuccess: " << ret << std::endl;
+            }
         }
     }
 

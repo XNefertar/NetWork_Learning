@@ -32,6 +32,7 @@ public:
           _socketfd(socketfd)
     {}
     ~ClientTCP() { close(_socketfd); }
+    
     void createSocket()
     {
         _socketfd = socket(AF_INET, SOCK_STREAM, 0);
