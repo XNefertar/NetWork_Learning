@@ -2,6 +2,7 @@
 #include <memory>
 
 using namespace std;
+using namespace server;
 static void Usage(string proc)
 {
     cerr << "\nUsage:\n\t" << proc << " server_port\n\n";
