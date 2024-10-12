@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/include/SFML",  // SFML 头文件路径
+                "/usr/include",         // 其他系统头文件路径
+                "/opt/rh/devtoolset-11/root/usr/lib/gcc/x86_64-redhat-linux/11/include",
+                "/usr/local/include",
+                "/opt/rh/devtoolset-11/root/usr/include",
+                "/usr/include"
+            ],
+            "defines": [],
+            "compilerPath": "/opt/rh/devtoolset-11/root/usr/bin/g++",  // 设置为正确的编译器路径
+            "cStandard": "c11",
+            "cppStandard": "c++17",  // 或 c++20，根据需要选择
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

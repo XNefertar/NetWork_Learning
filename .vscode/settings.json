@@ -34,5 +34,6 @@
         "ctime": "cpp",
         "ratio": "cpp",
         "thread": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/xl/code/repositories/network_learning/socket/SFML"
 }
