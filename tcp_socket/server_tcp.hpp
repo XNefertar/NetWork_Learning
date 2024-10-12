@@ -1,6 +1,9 @@
 #ifndef _SERVER_TCP_HPP
 #define _SERVER_TCP_HPP
 
+#include "Thread_Pool.hpp"
+#include "Task.hpp"
+
 #include <iostream>
 #include <string>
 #include <pthread.h>
@@ -12,10 +15,39 @@
 #include <sys/wait.h>
 #include <cstring>
 
+using namespace td;
+
 namespace server
 {
-    class ServerTCP;
 
+    void socketIO(int socket)
+    {
+        char buffer[1024] = {0}; // 初始化缓冲区
+        for (;;)
+        {
+            memset(buffer, 0, sizeof(buffer)); // 每次读取前清空缓冲区
+
+            int valread = read(socket, buffer, sizeof(buffer));
+            if (valread == 0)
+            {
+                std::cout << "Client disconnected" << std::endl;
+                break;
+            }
+            else if (valread == -1)
+            {
+                std::cerr << "Read error. errno: " << errno << std::endl;
+                break;
+            }
+
+            std::cout << "Client # " << buffer << std::endl;
+
+            std::string message = std::string(buffer) + " server[received]";
+            write(socket, message.c_str(), message.size());
+        }
+        close(socket); // 关闭套接字
+    }
+
+    class ServerTCP;
     struct ThreadData{
         int _socket;
         ServerTCP* _server;
@@ -74,7 +106,7 @@ namespace server
 
         void run()
         {
-
+            Thread_pool<Task>::getInstance()->run();
             // 连接客户端
             for (;;)
             {
@@ -89,11 +121,12 @@ namespace server
                 std::cout << "Client connected" << std::endl;
 
                 // version 1
-                // 串行执行
+                // 串行执行版
                 // socketIO(client_socket);
                 // close(client_socket);
 
-                // version 2 多进程版
+                // version 2
+                // 多进程版
                 // pid_t id = fork();
                 // if (id == 0) // child
                 // {
@@ -112,44 +145,29 @@ namespace server
                 //     std::cout << "waitsuccess: " << ret << std::endl;
                 // }
 
-                // version 3 多线程版
-                pthread_t _tid;
-                ThreadData *data = new ThreadData(this, client_socket);
-                pthread_create(&_tid, nullptr, threadFunc, data);
+                // version 3 
+                // 多线程版
+                // pthread_t _tid;
+                // ThreadData *data = new ThreadData(this, client_socket);
+                // pthread_create(&_tid, nullptr, threadFunc, data);
 
+
+                // version 4 
+                // 线程池版
+                Thread_pool<Task>::getInstance()->push(Task(socketIO, client_socket));
             }
         }
 
-        static void *threadFunc(void *args)
-        {
-            pthread_detach(pthread_self());
-            ThreadData *data = static_cast<ThreadData *>(args);
-            data->_server->socketIO(data->_socket);
-            close(data->_socket);
-            delete data;
-            return nullptr;
-        }
+        // static void *threadFunc(void *args)
+        // {
+        //     pthread_detach(pthread_self());
+        //     ThreadData *data = static_cast<ThreadData *>(args);
+        //     data->_server->socketIO(data->_socket);
+        //     close(data->_socket);
+        //     delete data;
+        //     return nullptr;
+        // }
 
-        void socketIO(int socket)
-        {
-            // 读取和写入可以看作对文件的读取和写入
-            // 采用系统调用接口read/write
-            char buffer[1024] = {0};
-            for (;;)
-            {
-                int valread = read(socket, buffer, 1024);
-                if (valread == 0)
-                {
-                    std::cout << "Client disconnected" << std::endl;
-                    break;
-                }
-                std::cout << "Client # " << buffer << std::endl;
-
-                std::string message = buffer;
-                message += " server[received]";
-                write(socket, message.c_str(), message.size());
-            }
-        }
     };
 }
 
