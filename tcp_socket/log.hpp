@@ -5,10 +5,13 @@
 #include <string>
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #define NORMAL 0
 #define WARNING 1
@@ -52,8 +55,11 @@ void logMessage(LOG_LEVEL level, const char *message, ...)
     char response[1024]{};
     vsprintf(response, message, args);
 
-    std::cout << buffer << response << std::endl;
-
+    int fd = open("log.txt", O_CREAT | O_WRONLY | O_APPEND, 0666);
+    write(fd, buffer, strlen(buffer));
+    write(fd, response, strlen(response));
+    write(fd, "\n", 1);
+    close(fd);
 
     va_end(args);
 }

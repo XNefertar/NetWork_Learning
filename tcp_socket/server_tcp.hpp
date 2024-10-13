@@ -40,17 +40,17 @@ namespace server
             if (valread == 0)
             {
                 logMessage(NORMAL, "Client disconnected");
-                // std::cout << "Client disconnected" << std::endl;
+                std::cout << "Client disconnected" << std::endl;
                 break;
             }
             else if (valread == -1)
             {
                 logMessage(ERROR, "Read error. errno: %d", errno);
-                // std::cerr << "Read error. errno: " << errno << std::endl;
+                std::cerr << "Read error. errno: " << errno << std::endl;
                 break;
             }
 
-            // std::cout << "Client # " << buffer << std::endl;
+            std::cout << "Client # " << buffer << std::endl;
             logMessage(NORMAL, "Client # %s", buffer);
 
             std::string message = std::string(buffer) + " server[received]";
@@ -95,31 +95,31 @@ namespace server
             if (_socketfd < 0)
             {
                 logMessage(ERROR, "Error creating socket");
-                // std::cerr << "Error creating socket" << std::endl;
+                std::cerr << "Error creating socket" << std::endl;
                 exit(1);
             }
             logMessage(NORMAL, "socket %d created", _socketfd);
-            // std::cout << "socket " << _socketfd << " created" << std::endl;
+            std::cout << "socket " << _socketfd << " created" << std::endl;
 
             // bind
             if (bind(_socketfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
             {
                 logMessage(ERROR, "Error binding socket");
-                // std::cerr << "Error binding socket" << std::endl;
+                std::cerr << "Error binding socket" << std::endl;
                 exit(1);
             }
             logMessage(NORMAL, "bind success");
-            // std::cout << "bind success" << std::endl;
+            std::cout << "bind success" << std::endl;
 
             // listen
             if (listen(_socketfd, 5) < 0)
             {
                 logMessage(ERROR, "Error listening on socket");
-                // std::cerr << "Error listening on socket" << std::endl;
+                std::cerr << "Error listening on socket" << std::endl;
                 exit(1);
             }
             logMessage(NORMAL, "listen success");
-            // std::cout << "listen success" << std::endl;
+            std::cout << "listen success" << std::endl;
         }
 
         void run()
@@ -134,11 +134,11 @@ namespace server
                 if (client_socket < 0)
                 {
                     logMessage(ERROR, "Error accepting client");
-                    // std::cerr << "Error accepting client" << std::endl;
+                    std::cerr << "Error accepting client" << std::endl;
                     continue;
                 }
                 logMessage(NORMAL, "Client connected");
-                // std::cout << "Client connected" << std::endl;
+                std::cout << "Client connected" << std::endl;
 
                 // version 1
                 // 串行执行版

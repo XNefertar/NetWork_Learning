@@ -117,7 +117,7 @@ public:
             }
             buffer[n] = '\0';
             logMessage(NORMAL, "服务器处理结果 # %s", buffer);
-            // std::cout << "服务器处理结果 # " << buffer << std::endl;
+            std::cout << "服务器处理结果 # " << buffer << std::endl;
         }
 
     }

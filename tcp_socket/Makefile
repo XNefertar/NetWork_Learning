@@ -9,4 +9,4 @@ client:client_tcp.cc
 
 .PHONY:clean
 clean:
-	rm -f server client
+	rm -f server client log.txt
