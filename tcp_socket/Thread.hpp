@@ -33,7 +33,7 @@ namespace td{
             // _args(args)
         {
             char namebuffer[1024];
-            snprintf(namebuffer, sizeof namebuffer, "thread-%d", thread_num++);
+            snprintf(namebuffer, sizeof namebuffer, "thread %-2d", thread_num++);
             _name = namebuffer;
         }
 

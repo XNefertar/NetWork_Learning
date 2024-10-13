@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <cstring>
+#include "log.hpp"
 
 #define USAGE_ERR   1
 #define BIND_ERR    2
@@ -110,11 +111,13 @@ public:
             ssize_t n = read(_socketfd, buffer, sizeof(buffer));
             if (n == 0)
             {
-                std::cerr << "Failed to receive message. errno: " << errno << std::endl;
+                logMessage(ERROR, "Failed to receive message. errno: %d", errno);
+                // std::cerr << "Failed to receive message. errno: " << errno << std::endl;
                 exit(SOCKET_ERR);
             }
             buffer[n] = '\0';
-            std::cout << "服务器处理结果 # " << buffer << std::endl;
+            logMessage(NORMAL, "服务器处理结果 # %s", buffer);
+            // std::cout << "服务器处理结果 # " << buffer << std::endl;
         }
 
     }
