@@ -1,4 +1,5 @@
 #include "server_tcp.hpp"
+#include "daemon.hpp"
 #include <memory>
 
 using namespace std;
@@ -20,6 +21,7 @@ int main(int argc, char* argv[])
     std::unique_ptr<ServerTCP> tcpServer(new ServerTCP(port));
 
     tcpServer->init();
+    daemon();
     tcpServer->run();
 
     return 0;

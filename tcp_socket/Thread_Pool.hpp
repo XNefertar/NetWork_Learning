@@ -101,7 +101,7 @@ public:
             
             Thread_Data<T>* td = new Thread_Data<T>(this, it->get_name());
             it->start(_start_func, td);
-            logMessage(NORMAL, "%s is starting...", it->get_name().c_str());
+            logMessage(DEBUG, "%s is starting...", it->get_name().c_str());
             // std::cout << it->get_name() << " is starting..." << std::endl;
         }
     }
