@@ -2,10 +2,10 @@
 all:server client
 
 server:server_tcp.cc
-	g++ -o $@ $^ -std=c++11 -lpthread
+	g++ -o $@ $^ -std=c++11 -lpthread #-DTEST
 
 client:client_tcp.cc
-	g++ -o $@ $^ -std=c++11 -lpthread
+	g++ -o $@ $^ -std=c++11 -lpthread #-DTEST
 
 .PHONY:clean
 clean:

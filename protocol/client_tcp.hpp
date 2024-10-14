@@ -12,6 +12,7 @@
 #include <cstring>
 #include "log.hpp"
 #include "protocol.hpp"
+#include "server_tcp.hpp"
 
 #define USAGE_ERR   1
 #define BIND_ERR    2
@@ -80,32 +81,8 @@ public:
         std::cout << "connected to server" << std::endl;
     }
 
-    // static void* readMessage(void* args)
-    // {
-    //     pthread_detach(pthread_self());
-    //     int sockfd = *static_cast<int *>(args);
-
-    //     while (1)
-    //     {
-    //         // 接收服务器的响应
-    //         char buffer[1024];
-    //         struct sockaddr_in temp;
-    //         socklen_t len = sizeof(temp);
-    //         ssize_t n = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&temp, &len);
-    //         if (n < 0)
-    //         {
-    //             std::cerr << "Failed to receive message. errno: " << errno << std::endl;
-    //             exit(SOCKET_ERR);
-    //         }
-    //         buffer[n] = '\0';
-    //         std::cout << "服务器处理结果 # " << buffer << std::endl;
-    //     }
-    // }
-
     void run()
     {
-        // pthread_create(&_reader, NULL, readMessage, (void *)&_socketfd);
-
         string message;
         struct sockaddr_in server_addr;
         server_addr.sin_family = AF_INET;
@@ -116,32 +93,50 @@ public:
             socklen_t server_addr_len = sizeof(server_addr);
             std::cout << "Please enter message: ";
             getline(std::cin, message);
-            // sendto(_socketfd, message.c_str(), message.size(), 0, (sockaddr*)&server_addr, sizeof(server_addr));
+
+            // 序列化
+            // Request req;
+            // if(!req.serialize(&message))
+            // {
+            //     logMessage(ERROR, "Failed to serialize message");
+            //     exit(SOCKET_ERR);
+            // }
+            
+#ifdef TEST
+            std::cout << "before length: " << message << std::endl;
+#endif
+            // 加上报头
+            message = enLength(message);
+#ifdef TEST
+            std::cout << "after length: " << message << std::endl;
+#endif
             write(_socketfd, message.c_str(), message.size());
 
-            // if(strcmp(message, "exit") == 0)
-            // {
-            //     break;
-            // }
-            // 接收服务器的响应
-            char buffer[1024];
-            struct sockaddr_in temp;
-            socklen_t len = sizeof(temp);
-            
-            ssize_t n = read(_socketfd, buffer, sizeof(buffer));
-            if (n == 0)
+            // 先读取
+            std::string message;
+            std::string inbuffer;
+
+            if(!recvPackage(_socketfd, inbuffer, &message))
             {
-                std::cerr << "Failed to receive message. errno: " << errno << std::endl;
+                logMessage(ERROR, "Failed to receive message");
                 exit(SOCKET_ERR);
             }
+
+#ifdef TEST
+            std::cout << "recv message: " << message << std::endl;
+#endif
+
+            std::string res_text;
+            if(!deLength(message, &res_text))
+                return;
             // 反序列化
             Response res;
-            if(!res.deserialize(buffer))
+            if(!res.deserialize(res_text))
             {
                 logMessage(ERROR, "Failed to deserialize message");
-                // std::cerr << "Failed to deserialize message" << std::endl;
                 exit(SOCKET_ERR);
             }
+
             logMessage(res.getExitcode(), "服务器处理结果 # %d, 处理码返回[%s]", res.getResult(), toString(res.getExitcode()).c_str());
             std::cout << "服务器处理结果 # " << res.getResult() << ", 处理码返回[" << toString(res.getExitcode()) << "]" << std::endl;
         }

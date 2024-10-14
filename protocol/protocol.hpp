@@ -20,6 +20,76 @@ namespace Procotol
         OP_ERR
     };
 
+    std::string enLength(const std::string& text)
+    {
+        // "len\n" + text + "\n"
+        std::string len = std::to_string(text.size());
+        std::string message = len + LINE_SEP + text + LINE_SEP;
+        return message;
+    }
+
+    bool deLength(const std::string& package, std::string* text)
+    {
+        auto it = package.find(LINE_SEP);
+        if(it == std::string::npos)
+        {
+            return false;
+        }
+        size_t len = std::stoi(package.substr(0, it));
+        // 获取用户正文
+        *text = package.substr(it + LINE_SEP_LEN, len);
+        return true;
+    }
+
+    
+    bool recvPackage(int sockfd, std::string &inbuffer, std::string *text){
+        char buffer[1024] = {0};
+        for(;;)
+        {
+            memset(buffer, 0, sizeof(buffer));
+            int valread = read(sockfd, buffer, sizeof(buffer));
+            if(valread == 0)
+            {
+                logMessage(NORMAL, "Client disconnected");
+                std::cout << "Client disconnected" << std::endl;
+                return false;
+            }
+            else if(valread == -1)
+            {
+                logMessage(ERROR, "Read error. errno: %d", errno);
+                std::cerr << "Read error. errno: " << errno << std::endl;
+                return false;
+            }
+
+            inbuffer += buffer;
+#ifdef TEST
+            std::cout << "buffer: " << buffer << std::endl;
+            std::cout << "inbuffer: " << inbuffer << std::endl;
+#endif
+            // 对 inbuffer 内的数据进行处理
+
+            size_t pos = inbuffer.find(LINE_SEP);
+            if(pos == std::string::npos)
+            {
+                return false;
+            }
+            int text_len = std::stoi(inbuffer.substr(0, pos));
+
+            int total_len = text_len + pos + LINE_SEP_LEN * 2;
+
+            // 处理正文长度小于等于报头中给定长度的情况
+            if(total_len > inbuffer.size())
+            {
+                continue;
+            }
+            *text = inbuffer.substr(0, total_len);
+            inbuffer.erase(0, total_len);
+            break;
+        }
+        return true;
+    }
+    
+    
     class Request
     {
     private:
@@ -45,7 +115,7 @@ namespace Procotol
         // "x op y"
         bool serialize(std::string *out)
         {
-            *out = std::to_string(_x) + SEP + _op + SEP + std::to_string(_y) + LINE_SEP;
+            *out = std::to_string(_x) + SEP + _op + SEP + std::to_string(_y);
             return true;
         }
 
