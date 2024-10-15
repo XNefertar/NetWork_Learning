@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cstring>
+#include <jsoncpp/json/json.h>
 
 #define SEP " "
 #define SEP_LEN strlen(SEP)
@@ -62,12 +63,8 @@ namespace Procotol
             }
 
             inbuffer += buffer;
-#ifdef TEST
-            std::cout << "buffer: " << buffer << std::endl;
-            std::cout << "inbuffer: " << inbuffer << std::endl;
-#endif
-            // 对 inbuffer 内的数据进行处理
 
+            // 对 inbuffer 内的数据进行处理
             size_t pos = inbuffer.find(LINE_SEP);
             if(pos == std::string::npos)
             {
@@ -89,7 +86,7 @@ namespace Procotol
         return true;
     }
     
-    
+    // Class Request
     class Request
     {
     private:
@@ -115,21 +112,28 @@ namespace Procotol
         // "x op y"
         bool serialize(std::string *out)
         {
+#ifdef MYSTLYE
             *out = std::to_string(_x) + SEP + _op + SEP + std::to_string(_y);
+#else
+            Json::Value root;
+            root["first"] = _x;
+            root["second"] = _y;
+            root["op"] = _op;
+
+            Json::FastWriter writer;
+            *out = writer.write(root);
+#endif
+
             return true;
         }
-
         // 反序列化
         // 输入型参数
         // 字符串切割
         bool deserialize(const std::string &in)
         {
+#ifdef MYSTLYE
             size_t pos = in.find(SEP);
             size_t rpos = in.rfind(SEP);
-#ifdef TEST
-            std::cout << "pos = " << pos << std::endl;
-            std::cout << "rpos = " << rpos << std::endl;
-#endif
             if (pos == std::string::npos || rpos == std::string::npos)
             {
                 return false;
@@ -142,10 +146,23 @@ namespace Procotol
             _x = std::stoi(in.substr(0, pos));
             _op = in[pos + 1];
             _y = std::stoi(in.substr(rpos + 1));
+#else
+            Json::Reader reader;
+            Json::Value root;
+            if(!reader.parse(in, root))
+            {
+                return false;
+            }
+            _x = root["first"].asInt(); 
+            _y = root["second"].asInt();
+            _op = static_cast<char>(root["op"].asInt());
+#endif
             return true;
         }
     };
 
+
+    // Class Response
     class Response
     {
     private:
@@ -168,7 +185,16 @@ namespace Procotol
         // "x op y"
         bool serialize(std::string *out)
         {
+#ifdef MYSTLYE
             *out = std::to_string(_result) + SEP + std::to_string(_exitcode) + LINE_SEP;
+#else
+            Json::Value root;
+            root["result"] = _result;
+            root["exitcode"] = _exitcode;
+
+            Json::FastWriter writer;
+            *out = writer.write(root);
+#endif
             return true;
         }
 
@@ -177,10 +203,20 @@ namespace Procotol
         // 字符串切割
         bool deserialize(const std::string &in)
         {
+#ifdef MYSTLYE
             size_t pos = in.find(SEP);
             _result= std::stoi(in.substr(0, pos));
             _exitcode = std::stoi(in.substr(pos + 1, in.size() - pos - LINE_SEP_LEN));
-
+#else
+            Json::Reader reader;
+            Json::Value root;
+            if(!reader.parse(in, root))
+            {
+                return false;
+            }
+            _result = root["result"].asInt();
+            _exitcode = root["exitcode"].asInt();
+#endif
             return true;
         }
     };

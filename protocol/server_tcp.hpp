@@ -47,7 +47,7 @@ namespace server
             if(!deLength(req_text, &temp))
             {
                 logMessage(ERROR, "Failed to deLength message");
-                std::cerr << "Failed to deLength message" << std::endl;
+                // std::cerr << "Failed to deLength message" << std::endl;
                 break;
             }
 #ifdef TEST
@@ -59,7 +59,7 @@ namespace server
             if(!req.deserialize(temp))
             {
                 logMessage(ERROR, "Failed to deserialize message");
-                std::cerr << "Failed to deserialize message" << std::endl;
+                // std::cerr << "Failed to deserialize message" << std::endl;
                 break;
             }
 
@@ -71,11 +71,15 @@ namespace server
             if(!res.serialize(&message))
             {
                 logMessage(ERROR, "Failed to serialize message");
-                std::cerr << "Failed to serialize message" << std::endl;
+                // std::cerr << "Failed to serialize message" << std::endl;
                 break;
             }
 
             message = enLength(message);
+#ifdef TEST
+            std::cout << "HandlerLink: " << message << std::endl;
+#endif
+
 
             write(sockfd, message.c_str(), message.size());
 #ifdef TEST

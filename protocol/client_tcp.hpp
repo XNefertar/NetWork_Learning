@@ -91,16 +91,16 @@ public:
         for(;;)
         {
             socklen_t server_addr_len = sizeof(server_addr);
-            std::cout << "Please enter message: ";
+            std::cout << "Please enter message # ";
             getline(std::cin, message);
 
             // 序列化
-            // Request req;
-            // if(!req.serialize(&message))
-            // {
-            //     logMessage(ERROR, "Failed to serialize message");
-            //     exit(SOCKET_ERR);
-            // }
+            Request req = ParseLine(message);
+            if(!req.serialize(&message))
+            {
+                logMessage(ERROR, "Failed to serialize message");
+                exit(SOCKET_ERR);
+            }
             
 #ifdef TEST
             std::cout << "before length: " << message << std::endl;
@@ -142,6 +142,16 @@ public:
         }
 
     }
+
+    // 处理用户输入
+    Request ParseLine(const std::string &line)
+    {
+        int x, y;
+        char op;
+        sscanf(line.c_str(), "%d %c %d", &x, &op, &y);
+        return Request(x, y, op);
+    }
+
 };
 
 
