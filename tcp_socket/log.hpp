@@ -55,7 +55,7 @@ void logMessage(LOG_LEVEL level, const char *message, ...)
     char response[1024]{};
     vsprintf(response, message, args);
 
-    int fd = open("log.txt", O_CREAT | O_WRONLY | O_APPEND, 0666);
+    int fd = open("./log.txt", O_CREAT | O_WRONLY | O_APPEND, 0666);
     write(fd, buffer, strlen(buffer));
     write(fd, response, strlen(response));
     write(fd, "\n", 1);
