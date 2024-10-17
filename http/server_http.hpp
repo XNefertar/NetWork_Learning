@@ -45,7 +45,6 @@ namespace server
         HttpRequest req;
         req.parse(buffer);
 
-
         HttpResponse res;
         req.getInbuffer() = buffer;
         func(req, res);

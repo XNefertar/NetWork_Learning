@@ -14,6 +14,8 @@ const std::string defaultRoot           =  "./wwwroot";
 const std::string home_page             =  "index.html";
 const std::string defaultContentLength  =  "Content-Length: ";
 const std::string defaultConnection     =  "Connection: close";
+const std::string errUrl                =  "404.html";
+const std::string defaultErr            =  "404 Not Found";
 
 namespace Protocol
 {
@@ -38,13 +40,18 @@ namespace Protocol
             {
                 _path += home_page;
             }
+
             std::cout << "method # " << _method << std::endl;
             std::cout << "path # " << _path << std::endl;
             std::cout << "version # " << _version << std::endl;
 
         }
 
-        std::string getInbuffer() const { return _inbuffer; }
+        std::string getMethod()   const { return _method; }
+        std::string getUrl()      const { return _url; }
+        std::string getVersion()  const { return _version; }
+        std::string getPath()     const { return _path; }
+        std::string& getInbuffer() { return _inbuffer; }
 
     private:
         std::string _inbuffer;
