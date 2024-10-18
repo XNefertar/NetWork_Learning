@@ -47,7 +47,27 @@ bool Get(const HttpRequest &req, HttpResponse &res)
 
     if (!Util::readFile(req.getPath(), &body[0], req.getSize()))
     {
-        Util::readFile(errUrl, &body[0], req.getSize());
+        // 读取失败，返回404页面
+        struct stat st;
+        
+        if (stat(errUrl.c_str(), &st) == 0)
+        {
+            
+            body.resize(st.st_size + 1);
+            Util::readFile(errUrl, &body[0], st.st_size);
+            respline = "HTTP/1.1 404 Not Found\r\n";
+            respheader = "Content-Type: text/html\r\n";
+            respheader += "Content-Length: " + std::to_string(st.st_size) + "\r\n";
+        }
+        else
+        {
+            // 如果404页面也不存在，返回一个简单的404消息
+            std::string notFoundMessage = "<html><body><h1>404 Not Found</h1></body></html>";
+            body = notFoundMessage;
+            respline = "HTTP/1.1 404 Not Found\r\n";
+            respheader = "Content-Type: text/html\r\n";
+            respheader += "Content-Length: " + std::to_string(notFoundMessage.size()) + "\r\n";
+        }
     }
 
     res._outbuffer = respline + respheader + respblank + body;
