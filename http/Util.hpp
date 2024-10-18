@@ -8,36 +8,31 @@
 class Util
 {
 public:
-    static std::string getOnline(std::string inbuffer, std::string sep)
+    // sep  \r\n
+    // 获取请求行
+    static std::string getOnline(std::string& inbuffer, const std::string sep)
     {
         auto pos = inbuffer.find(sep);
         if (pos == std::string::npos)
         {
             return "";
         }
-        auto temp = inbuffer.substr(0, pos);
-        inbuffer = inbuffer.substr(pos + sep.size());
-        return temp;
+        std::string sub = inbuffer.substr(0, pos);
+        return sub;
     }
 
-    static bool readFile(const std::string &path, std::string* outbuffer)
+    static bool readFile(const std::string &path, char *outbuffer, int size)
     {
-        std::ifstream in(path);
+        std::ifstream in(path, std::ios::binary); // 以二进制模式打开文件
         if (!in.is_open())
         {
             return false;
         }
-        std::string line;
-        while(std::getline(in, line))
-        {
-            *outbuffer += line;
-        }
+
+        in.read(outbuffer, size);
         in.close();
         return true;
     }
-
 };
-
-
 
 #endif // _UTIL_HPP

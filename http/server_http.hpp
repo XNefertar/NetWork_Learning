@@ -1,6 +1,5 @@
 #ifndef _SERVER_TCP_HPP
 #define _SERVER_TCP_HPP
-// #include "log.hpp"
 #include "protocol.hpp"
 
 #include <iostream>
@@ -15,42 +14,19 @@
 #include <sys/wait.h>
 #include <cstring>
 
-#define NORMAL  0
+#define NORMAL 0
 #define WARNING 1
-#define ERROR   2
-#define FATAL   3
-#define DEBUG   4
-#define INFO    5
+#define ERROR 2
+#define FATAL 3
+#define DEBUG 4
+#define INFO 5
 
 using namespace std;
 using namespace Protocol;
 
 namespace server
 {
-    using func_t = std::function<void(const HttpRequest&, HttpResponse&)>;
-
-    void HttpHandle(int socketfd, func_t func)
-    {
-        char buffer[1024]{};
-        int len = recv(socketfd, buffer, sizeof(buffer), 0);
-        if (len < 0)
-        {
-            // logMessage(ERROR, "Error reading from socket");
-            std::cerr << "Error reading from socket" << std::endl;
-            return;
-        }
-        // logMessage(NORMAL, "Received: %s", buffer);
-        std::cout << "Received: " << buffer << std::endl;
-
-        HttpRequest req;
-        req.parse(buffer);
-
-        HttpResponse res;
-        req.getInbuffer() = buffer;
-        func(req, res);
-
-        send(socketfd, res._outbuffer.c_str(), res._outbuffer.size(), 0);
-    }
+    using func_t = std::function<void(const HttpRequest &, HttpResponse &)>;
 
     class ServerHttp
     {
@@ -61,8 +37,8 @@ namespace server
 
     public:
         ServerHttp(func_t func, int port, int socketfd = -1)
-            : _port(port),
-            _func(func)
+            : _func(func),
+              _port(port)
         {
         }
 
@@ -80,32 +56,50 @@ namespace server
 
             if (_socketfd < 0)
             {
-                // logMessage(ERROR, "Error creating socket");
                 std::cerr << "Error creating socket" << std::endl;
                 exit(1);
             }
-            // logMessage(NORMAL, "socket %d created", _socketfd);
             std::cout << "socket " << _socketfd << " created" << std::endl;
 
             // bind
             if (bind(_socketfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
             {
-                // logMessage(ERROR, "Error binding socket");
                 std::cerr << "Error binding socket" << std::endl;
                 exit(1);
             }
-            // logMessage(NORMAL, "bind success");
             std::cout << "bind success" << std::endl;
 
             // listen
             if (listen(_socketfd, 5) < 0)
             {
-                // logMessage(ERROR, "Error listening on socket");
                 std::cerr << "Error listening on socket" << std::endl;
                 exit(1);
             }
-            // logMessage(NORMAL, "listen success");
             std::cout << "listen success" << std::endl;
+        }
+
+        void HttpHandle(int sockfd)
+        {
+            char buffer[40096]{};
+            HttpRequest req;
+            HttpResponse res;
+
+            int len = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+            if (len > 0)
+            {
+                buffer[len] = '\0';
+                // std::cout << "len: " << len << std::endl;
+                // logMessage(NORMAL, "Received: %s", buffer);
+                // std::cout << "Received: " << buffer << std::endl;
+
+                std::string inbuffer(buffer);
+                req.setInbuffer(inbuffer);
+                req.parse();
+
+                _func(req, res);
+
+                send(sockfd, res._outbuffer.c_str(), res._outbuffer.size(), 0);
+            }
         }
 
         void run()
@@ -118,11 +112,9 @@ namespace server
                 int client_socket = accept(_socketfd, (struct sockaddr *)&client_addr, &client_addr_size);
                 if (client_socket < 0)
                 {
-                    // logMessage(ERROR, "Error accepting client");
                     std::cerr << "Error accepting client" << std::endl;
                     continue;
                 }
-                // logMessage(NORMAL, "Client connected");
                 std::cout << "Client connected" << std::endl;
 
                 pid_t id = fork();
@@ -132,13 +124,13 @@ namespace server
                     close(_socketfd);
                     if (fork() > 0)
                         exit(0);
-                    HttpHandle(client_socket, _func);
+                    HttpHandle(client_socket);
                     close(client_socket);
                     exit(0);
                 }
                 close(client_socket);
 
-                //father
+                // father
                 pid_t ret = waitpid(id, nullptr, 0);
             }
         }
