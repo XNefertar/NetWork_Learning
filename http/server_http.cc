@@ -38,8 +38,11 @@ bool Get(const HttpRequest &req, HttpResponse &res)
     std::string respheader = suffixToDesc(req.getSuffix());
     if (req.getSize() > 0)
     {
-        respheader += "Content-Length: " + std::to_string(req.getSize()) + "\r\n";
+        // respheader += "Content-Length: " + std::to_string(req.getSize()) + "\r\n";
     }
+    
+    respheader += "Set-Cookie: 123456abcdef\r\n";
+    // respheader += "Location: https://www.qq.com/\r\n";
 
     std::string respblank = "\r\n";
     std::string body;
@@ -69,6 +72,8 @@ bool Get(const HttpRequest &req, HttpResponse &res)
             respheader += "Content-Length: " + std::to_string(notFoundMessage.size()) + "\r\n";
         }
     }
+    
+    respheader += "Content-Length: " + std::to_string(body.size()) + "\r\n";
 
     res._outbuffer = respline + respheader + respblank + body;
     return true;
