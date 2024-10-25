@@ -1,5 +1,6 @@
 #include "server_http.hpp"
 #include "protocol.hpp"
+#include "daemon.hpp"
 #include <memory>
 #include <iconv.h>
 
@@ -88,6 +89,7 @@ int main(int argc, char *argv[])
     }
     unique_ptr<ServerHttp> server(new ServerHttp(Get, atoi(argv[1])));
     server->init();
+    daemon();
     server->run();
     return 0;
 }
