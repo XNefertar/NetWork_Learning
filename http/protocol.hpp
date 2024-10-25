@@ -57,7 +57,7 @@ namespace Protocol
 
             // 5. 得到资源的大小
             struct stat st;
-            int n = stat(_path.c_str(), &st); // 使用 _path 而不是 path
+            int n = stat(_path.c_str(), &st); 
             if (n == 0)
                 _size = st.st_size;
             else

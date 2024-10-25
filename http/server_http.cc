@@ -56,7 +56,7 @@ bool Get(const HttpRequest &req, HttpResponse &res)
         if (stat(errUrl.c_str(), &st) == 0)
         {
             
-            body.resize(st.st_size + 1);
+            body.resize(st.st_size);
             Util::readFile(errUrl, &body[0], st.st_size);
             respline = "HTTP/1.1 404 Not Found\r\n";
             respheader = "Content-Type: text/html\r\n";
