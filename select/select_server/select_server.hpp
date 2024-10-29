@@ -21,6 +21,15 @@ namespace Select
         {
         }
 
+        void Print()
+        {
+            for(int i = 0; i < max_fdset; ++i)
+            {
+                if (fd_array[i] != default_val)
+                    std::cout << "fd_array[" << i << "] = " << fd_array[i] << std::endl;
+            }
+        }
+
         void HandlerEvent(int listen_fd, fd_set &rfds)
         {
             if (FD_ISSET(listen_fd, &rfds))
@@ -31,6 +40,7 @@ namespace Select
                 if (sock < 0)
                     return;
                 std::cout << "client ip: " << client_ip << " port: " << client_port << std::endl;
+                std::cout << "new sock: " << sock << std::endl;
 
                 // 将新的sock加入到fd_array中
                 // 找到未使用的位置
@@ -38,9 +48,9 @@ namespace Select
                 int index = 0;
                 for(index = 0; index < max_fdset; ++index)
                 {
-                    if(fd_array[i] == default_val)
+                    if(fd_array[index] == default_val)
                     {
-                        fd_array[i] = sock;
+                        fd_array[index] = sock;
                         break;
                     }
                 }
@@ -49,6 +59,7 @@ namespace Select
                     std::cerr << "fd_array is full" << std::endl;
                     close(sock);
                 }
+                Print();
             }
         }
 
@@ -60,7 +71,7 @@ namespace Select
             fd_array = new int[max_fdset]{};
             for (int i = 0; i < max_fdset; ++i)
                 fd_array[i] = default_val;
-            fd_array[_listen_fd] = _listen_fd;
+            fd_array[0] = _listen_fd;
         }
         
         void start()
@@ -91,7 +102,7 @@ namespace Select
                     max_fd = std::max(max_fd, fd_array[i]);
                 }
                 
-                struct timeval timeout = {5, 0};
+                // struct timeval timeout = {5, 0};
                 // 采用select模型
                 int n = select(max_fd + 1, &rfds, nullptr, nullptr, nullptr);
                 switch (n)
