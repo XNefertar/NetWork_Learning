@@ -57,6 +57,7 @@ public:
             std::cerr << "listen error" << std::endl;
             exit(1);
         }
+        std::cout << "Listen fd: " << fd << std::endl;
     }
 
     static int Accept(int sock, std::string& ip, uint16_t& port)
