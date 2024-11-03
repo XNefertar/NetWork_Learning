@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <cstring>
 #include "sock.hpp"
 
 namespace Select
@@ -23,43 +24,81 @@ namespace Select
 
         void Print()
         {
-            for(int i = 0; i < max_fdset; ++i)
+            for (int i = 0; i < max_fdset; ++i)
             {
                 if (fd_array[i] != default_val)
                     std::cout << "fd_array[" << i << "] = " << fd_array[i] << std::endl;
             }
         }
 
-        void HandlerEvent(int listen_fd, fd_set &rfds)
+        void ListenFunc(int listen_fd)
         {
-            if (FD_ISSET(listen_fd, &rfds))
+            struct sockaddr_in client_addr;
+            socklen_t len = sizeof(client_addr);
+            int client_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &len);
+            if (client_fd < 0)
             {
-                std::string client_ip;
-                uint16_t client_port;
-                int sock = Sock::Accept(listen_fd, client_ip, client_port);
-                if (sock < 0)
-                    return;
-                std::cout << "client ip: " << client_ip << " port: " << client_port << std::endl;
-                std::cout << "new sock: " << sock << std::endl;
-
-                // 将新的sock加入到fd_array中
-                // 找到未使用的位置
-                // 将sock加入到fd_array中
-                int index = 0;
-                for(index = 0; index < max_fdset; ++index)
+                std::cerr << "accept error" << std::endl;
+                return;
+            }
+            std::cout << "accept a new client: " << inet_ntoa(client_addr.sin_addr) << std::endl;
+            // 将client_fd加入到fd_array中
+            for (int j = 0; j < max_fdset; ++j)
+            {
+                if (fd_array[j] == default_val)
                 {
-                    if(fd_array[index] == default_val)
+                    fd_array[j] = client_fd;
+                    break;
+                }
+            }
+        }
+
+        void RecvFunc(int fd)
+        {
+            char buf[1024];
+            memset(buf, 0, sizeof(buf));
+            int n = recv(fd, buf, sizeof(buf), 0);
+            if (n <= 0)
+            {
+                std::cerr << "recv error" << std::endl;
+                close(fd);
+                for (int i = 0; i < max_fdset; ++i)
+                {
+                    if (fd_array[i] == fd)
                     {
-                        fd_array[index] = sock;
+                        fd_array[i] = default_val;
                         break;
                     }
                 }
-                if(index == max_fdset)
+            }
+            else
+            {
+                // 删除buf中的换行符
+                buf[n - 1] = '\0';
+                std::cout << "recv: " << buf << std::endl;
+                std::string str = "server # " + std::string(buf) + "\n";
+                send(fd, str.c_str(), str.size(), 0);
+            }
+        }
+
+        void HandlerEvent(int listen_fd, fd_set &rfds)
+        {
+            // 过滤非法的fd
+            for (int i = 0; i < max_fdset; ++i)
+            {
+                if (fd_array[i] == default_val)
+                    continue;
+                if (FD_ISSET(fd_array[i], &rfds))
                 {
-                    std::cerr << "fd_array is full" << std::endl;
-                    close(sock);
+                    if (fd_array[i] == listen_fd)
+                    {
+                        ListenFunc(listen_fd);
+                    }
+                    else
+                    {
+                        RecvFunc(fd_array[i]);
+                    }
                 }
-                Print();
             }
         }
 
@@ -73,27 +112,17 @@ namespace Select
                 fd_array[i] = default_val;
             fd_array[0] = _listen_fd;
         }
-        
+
         void start()
         {
-
             for (;;)
             {
-                // 本质是阻塞式等待
-                // Accept = 等 + 获取
-                // 1. 等：等待客户端连接
-                // 2. 获取：获取客户端连接
-                // std::string client_ip;
-                // uint16_t client_port;
-                // int sock = Sock::Accept(_listen_fd, client_ip, client_port);
-                // if(sock < 0) continue;
-                // ---------------------------------------------------------------
-                // ---------------------------------------------------------------
-
                 fd_set rfds;
                 FD_ZERO(&rfds);
 
                 int max_fd = _listen_fd;
+                // 将fd_array中的有效fd加入到rfds中
+                // 更新max_fd
                 for (int i = 0; i < max_fdset; ++i)
                 {
                     if (fd_array[i] == default_val)
@@ -101,7 +130,7 @@ namespace Select
                     FD_SET(fd_array[i], &rfds);
                     max_fd = std::max(max_fd, fd_array[i]);
                 }
-                
+
                 // struct timeval timeout = {5, 0};
                 // 采用select模型
                 int n = select(max_fd + 1, &rfds, nullptr, nullptr, nullptr);
@@ -120,9 +149,9 @@ namespace Select
             }
         }
 
-        ~SelectServer() 
+        ~SelectServer()
         {
-            if(_listen_fd != -1)
+            if (_listen_fd != -1)
                 close(_listen_fd);
             delete[] fd_array;
         }

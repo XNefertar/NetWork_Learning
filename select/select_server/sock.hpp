@@ -29,6 +29,7 @@ public:
             exit(1);
         }
         std::cout << "Socket fd: " << fd << std::endl;
+        // 设置端口复用
         int opt = 1;
         setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
