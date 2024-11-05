@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <jsoncpp/json/json.h>
+#include "log.hpp"
 
 #define SEP " "
 #define SEP_LEN strlen(SEP)
