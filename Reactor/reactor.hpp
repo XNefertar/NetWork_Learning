@@ -80,10 +80,10 @@ namespace ReactorServer
             switch (n)
             {
             case -1:
-                logMessage(ERROR, "epoll_wait error\n");
+                LOG_MESSAGE(ERROR, "epoll_wait error\n");
                 break;
             case 0:
-                logMessage(NORMAL, "epoll_wait timeout\n");
+                LOG_MESSAGE(NORMAL, "epoll_wait timeout\n");
                 break;
             default:
                 HandlerEvent(n);
@@ -113,7 +113,7 @@ namespace ReactorServer
             auto iter = _conns.find(fd);
             if (iter == _conns.end())
             {
-                logMessage(ERROR, "can't find fd\n");
+                LOG_MESSAGE(ERROR, "can't find fd\n");
                 return;
             }
 
@@ -139,7 +139,7 @@ namespace ReactorServer
             int conn_sock = Sock::Accept(listenfd, ip, port);
             if (conn_sock == -1)
             {
-                logMessage(ERROR, "accept error\n");
+                LOG_MESSAGE(ERROR, "accept error\n");
                 return;
             }
 
@@ -189,7 +189,7 @@ namespace ReactorServer
 
         void RecvHandler(Connections *conns)
         {
-            char buffer[default_maxSize];
+            char buffer[default_maxSize]{};
             for (;;)
             {
                 int n = recv(conns->_sockfd, buffer, sizeof(buffer) - 1, 0);
@@ -201,30 +201,26 @@ namespace ReactorServer
                     {
                         _taskHandler(conns);
                     }
-                    logMessage(DEBUG, "recv: %s\n", conns->_inbuffer.c_str());
+                    LOG_MESSAGE(NORMAL, "recv: %s\n", conns->_inbuffer.c_str());
                 }
                 else if (n == 0)
                 {
-                    if (conns->_excepHandler)
-                    {
-                        conns->_excepHandler(conns);
-                        return;
-                    }
+                    LOG_MESSAGE(NORMAL, "client disconnected\n");
+                    break;
                 }
                 else
                 {
                     if (errno == EAGAIN || errno == EWOULDBLOCK)
-                    {
                         break;
-                    }
                     else if (errno == EINTR)
-                    {
                         continue;
-                    }
                     else
                     {
-                        logMessage(ERROR, "recv error: %s\n", strerror(errno));
-                        break;
+                        if (conns->_excepHandler)
+                        {
+                            conns->_excepHandler(conns);
+                            return;
+                        }
                     }
                 }
             }
@@ -249,7 +245,7 @@ namespace ReactorServer
             _epoll.AddEvent(sock, events);
             _conns.insert(std::pair<int, Connections *>(sock, conn));
 
-            logMessage(DEBUG, "Add connection: %d\n", sock);
+            LOG_MESSAGE(DEBUG, "Add connection: %d\n", sock);
         }
 
     public:
@@ -259,12 +255,12 @@ namespace ReactorServer
               _events(nullptr),
               _taskHandler(taskHandler)
         {
-            logMessage(NORMAL, "Reactor construct\n");
+            LOG_MESSAGE(DEBUG, "Reactor construct\n");
         }
 
         ~Reactor()
         {
-            logMessage(NORMAL, "Reactor destruct\n");
+            LOG_MESSAGE(NORMAL, "Reactor destruct\n");
             if (_listen_fd != default_value)
             {
                 close(_listen_fd);
@@ -293,7 +289,7 @@ namespace ReactorServer
 
             if (!_epoll.Create(max_events))
             {
-                logMessage(ERROR, "epoll_create error\n");
+                LOG_MESSAGE(ERROR, "epoll_create error\n");
                 exit(1);
             }
 
@@ -302,14 +298,14 @@ namespace ReactorServer
             ev.data.fd = _listen_fd;
             if (_epoll.AddEvent(_listen_fd, EPOLLIN) == false)
             {
-                logMessage(ERROR, "epoll_ctl error\n");
+                LOG_MESSAGE(ERROR, "epoll_ctl error\n");
                 exit(1);
             }
 
             _events = new struct epoll_event[max_events];
             if (_events == nullptr)
             {
-                logMessage(ERROR, "new epoll_event error\n");
+                LOG_MESSAGE(ERROR, "new epoll_event error\n");
                 exit(1);
             }
         }

@@ -26,10 +26,10 @@ public:
         int fd = socket(AF_INET, SOCK_STREAM, 0);
         if (fd < 0)
         {
-            logMessage(ERROR, "socket error\n");
+            LOG_MESSAGE(ERROR, "socket error\n");
             exit(1);
         }
-        logMessage(NORMAL, "Socket fd: %d\n", fd);
+        LOG_MESSAGE(DEBUG, "Socket fd: %d\n", fd);
         // 设置端口复用
         int opt = 1;
         setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -46,20 +46,20 @@ public:
         addr.sin_addr.s_addr = INADDR_ANY;
         if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         {
-            logMessage(ERROR, "bind error\n");
+            LOG_MESSAGE(ERROR, "bind error\n");
             exit(1);
         }
-        logMessage(NORMAL, "Bind fd: %d\n", fd);
+        LOG_MESSAGE(DEBUG, "Bind fd: %d\n", fd);
     }
 
     static void Listen(int fd)
     {
         if (listen(fd, backlog) < 0)
         {
-            logMessage(ERROR, "listen error\n");
+            LOG_MESSAGE(ERROR, "listen error\n");
             exit(1);
         }
-        logMessage(NORMAL, "Listen fd: %d\n", fd);
+        LOG_MESSAGE(DEBUG, "Listen fd: %d\n", fd);
     }
 
     static int Accept(int sock, std::string& ip, uint16_t& port)
@@ -74,7 +74,7 @@ public:
         }
         ip = inet_ntoa(addr.sin_addr);
         port = ntohs(addr.sin_port);
-        std::cout << "Accept fd: " << fd << std::endl;
+        LOG_MESSAGE(DEBUG, "Accept fd: %d\n", fd);
         return fd;
     }
 };

@@ -52,13 +52,13 @@ namespace Procotol
             int valread = read(sockfd, buffer, sizeof(buffer));
             if(valread == 0)
             {
-                logMessage(NORMAL, "Client disconnected");
+                LOG_MESSAGE(NORMAL, "Client disconnected");
                 std::cout << "Client disconnected" << std::endl;
                 return false;
             }
             else if(valread == -1)
             {
-                logMessage(ERROR, "Read error. errno: %d", errno);
+                LOG_MESSAGE(ERROR, "Read error. errno: %d", errno);
                 std::cerr << "Read error. errno: " << errno << std::endl;
                 return false;
             }

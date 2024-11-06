@@ -39,9 +39,9 @@ const char* get_color(int level)
     }
 }
 
-void logMessage(int level, const char *format, ...)
+void logMessage(int level, const char *file, int line, const char *format, ...)
 {
-    // if (level <= DEBUG || level > FATAL) return;
+    if(level < DEBUG || level > FATAL) return;
     const char* color = get_color(level);
     const char* level_str = to_levelstr(level);
     if (level_str == nullptr) return;
@@ -51,8 +51,9 @@ void logMessage(int level, const char *format, ...)
     char time_str[20];
     strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", localtime(&now));
 
-    // 打印日志等级和时间
-    std::cout << color << "[" << time_str << " " << level_str << "] ";
+    // 打印日志等级、时间、文件名和行号
+    std::cout << color << "[" << time_str << " " << level_str << "] "
+              << file << ":" << line << " ";
 
     // 重置颜色
     std::cout << "\033[0m";
@@ -62,7 +63,8 @@ void logMessage(int level, const char *format, ...)
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
-
 }
+
+#define LOG_MESSAGE(level, format, ...) logMessage(level, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
 #endif // _LOG_HPP_

@@ -13,12 +13,12 @@ public:
         int flags = fcntl(fd, F_GETFL, 0);
         if (flags == -1)
         {
-            logMessage(ERROR, "fcntl F_GETFL error\n");
+            LOG_MESSAGE(ERROR, "fcntl F_GETFL error\n");
             return false;
         }
         if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
         {
-            logMessage(ERROR, "fcntl F_SETFL error\n");
+            LOG_MESSAGE(ERROR, "fcntl F_SETFL error\n");
             return false;
         }
         return true;
