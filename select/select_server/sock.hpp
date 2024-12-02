@@ -65,6 +65,9 @@ public:
     {
         struct  sockaddr_in addr;
         socklen_t len = sizeof(addr);
+        // 默认为阻塞式系统调用
+        // 可以通过 fcntl 设置文件描述符为非阻塞模式
+        // 或者通过 select、poll/epoll 多路转接实现非阻塞调用
         int fd = accept(sock, (struct sockaddr*)&addr, &len);
         if(fd < 0)
         {
